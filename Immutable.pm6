@@ -1,37 +1,38 @@
 unit class Immutable;
+my UInt $fid = 1;
 
 has UInt $.next-eid  = 1;
 has UInt $.next-tid  = 1;
 has List $.list      = ();
 
-has      $.cache     = (Map.new, Map.new, Map.new, Map.new);
+has      $.index     = (Map.new, Map.new, Map.new, Map.new);
 
 method !fact-line(\entity-id, \attribute, \value, \trans-id) {
-	(entity-id, attribute, value, trans-id)
+	(entity-id, attribute, value, trans-id) but $fid++
 }
 
-method add-fact(List \fact, :$next-eid = $!next-eid, :$next-tid = $!next-tid, :$cache = 0) {
+method add-fact(List \fact, :$next-eid = $!next-eid, :$next-tid = $!next-tid, :$index = 0) {
 	my \c = \(fact, :$next-eid, :$next-tid);
-	my $e-cache = %(|$!cache[0], fact[0] => ($!cache[0]{fact[0]} // Immutable.new).add-fact(|c, :cache(1 +| $cache)))
-		unless $cache +& 1;
-	my $a-cache = %(|$!cache[1], fact[1] => ($!cache[1]{fact[1]} // Immutable.new).add-fact(|c, :cache(2 +| $cache)))
-		unless $cache +& 2;
-	my $v-cache = %(|$!cache[2], fact[2] => ($!cache[2]{fact[2]} // Immutable.new).add-fact(|c, :cache(4 +| $cache)))
-		unless $cache +& 4;
-	my $t-cache = %(|$!cache[3], fact[3] => ($!cache[3]{fact[3]} // Immutable.new).add-fact(|c, :cache(8 +| $cache)))
-		unless $cache +& 8;
+	my $e-index = %(|$!index[0], fact[0] => ($!index[0]{fact[0]} // Immutable.new).add-fact(|c, :index(1 +| $index)))
+		unless $index +& 1;
+	my $a-index = %(|$!index[1], fact[1] => ($!index[1]{fact[1]} // Immutable.new).add-fact(|c, :index(2 +| $index)))
+		unless $index +& 2;
+	my $v-index = %(|$!index[2], fact[2] => ($!index[2]{fact[2]} // Immutable.new).add-fact(|c, :index(4 +| $index)))
+		unless $index +& 4;
+	my $t-index = %(|$!index[3], fact[3] => ($!index[3]{fact[3]} // Immutable.new).add-fact(|c, :index(8 +| $index)))
+		unless $index +& 8;
 
-	my \new = self.clone(
+	my \new = self.new(
 		:$next-eid,
 		:$next-tid,
-		:list(fact, |$!list),
+		:list(|$!list, fact),
 	);
 	new.clone:
-		:cache(
-			$e-cache // { fact[0] => new },
-			$a-cache // { fact[1] => new },
-			$v-cache // { fact[2] => new },
-			$t-cache // { fact[3] => new },
+		:index(
+			$e-index // { fact[0] => new },
+			$a-index // { fact[1] => new },
+			$v-index // { fact[2] => new },
+			$t-index // { fact[3] => new },
 		),
 	;
 }

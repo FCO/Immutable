@@ -12,7 +12,7 @@ $i .= add-attributes: fid, {"relationship/wife" => aid, "person/surname" => "Oli
 
 
 say $i;
-#.say for $i.cache[1]<person/age>.cache[1]<person/age>
+#.say for $i.index[1]<person/age>.index[1]<person/age>
 '
 2 | relationship/wife    |                         4 | 3
 2 | person/surname       |                  Oliveira | 3
