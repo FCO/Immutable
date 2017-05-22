@@ -5,10 +5,22 @@ has UInt $.next-eid  = 1;
 has UInt $.next-tid  = 1;
 has List $.list      = ();
 
-has      $.index     = (Map.new, Map.new, Map.new, Map.new);
+has      $.index     = Map.new xx 4;
+
+method List  {$.list}
+method Array {$.list.Array}
+method Set   {$.list.Array.Set}
 
 method !fact-line(\entity-id, \attribute, \value, \trans-id) {
-	(entity-id, attribute, value, trans-id) but $fid++
+	(entity-id, attribute, value, trans-id) but role :: {has $.id = $fid++}
+}
+
+method union(Immutable $b) {
+	self.new:
+		:list((self ∪ $b).keys.sort(*.id).List),
+		:next-eid($.next-eid max $b.next-eid),
+		:next-tid($.next-tid max $b.next-tid),
+	;
 }
 
 method add-fact(List \fact, :$next-eid = $!next-eid, :$next-tid = $!next-tid, :$index = 0) {
