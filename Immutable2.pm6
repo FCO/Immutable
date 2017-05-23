@@ -1,4 +1,24 @@
 class Immutable {
+	class Keywords {
+		has Map %.data .= new;
+		method FALLBACK($name) {
+			die "$name does not exists" unless %!data{$name}:exists;
+			%!data{$name}
+		}
+		multi method add($name, $val) {
+			$.add($name.subst(/^ '.'/, "").split("."), $val)
+		}
+
+		multi method add([], $val) {
+			$val
+		}
+
+		multi method add([$n, @name], $val) {
+			%(
+				|%!data, $n => (%!data{$n} // Keywords.new).add(@name, $val)
+			)
+		}
+	}
 	class Fact {
 		my $id = 0;
 		has $!id          = $id++;
@@ -7,7 +27,9 @@ class Immutable {
 		has $.value;
 		has $.transaction;
 
-		method id {$!id}
+		method id       { $!id }
+		method destruct { $!entity, $!attribute, $!value, $!transaction }
+		method sizes    { |$.destruct.map: *.chars }
 
 		multi method new(UInt $entity, UInt $attribute, Any $value, UInt $transaction) {
 			self.new: :$entity:$attribute:$value:$transaction
@@ -65,7 +87,42 @@ class Immutable {
 		Fact.new($doc, $doc  , "specifies a documentation string", 0),
 	);
 
+	has Keywords $.keywords .= new;
+	has Map      $.EVAT     .= new;
+
+	method sizes {
+		@ = @!facts
+			.map({$[.sizes]})
+			.reduce: -> @a, @b {
+				(@a Z @b).map: -> ($a, $b) { $a max $b }
+			}
+		;
+	}
+
+	method create-keyword($name) {
+
+	}
+
+	method add-EVAT(Fact \fact) {
+		my ($entity, $attribute, $value, $transaction) = fact.destruct;
+		Map.new: %(
+			|$!EVAT,
+				$entity => Map.new: %(
+					|$!EVAT{$entity},
+						$value => Map.new: %(
+							|$!EVAT{$entity}{$value},
+								Map.new: {$attribute => $transaction}
+						)
+				)
+		)
+	}
+
+	method gist  {
+		$ = do for @!facts {
+			sprintf "% *s | % -*s | % *s | % *s", flat @.sizes Z .destruct
+		}.join: "\n"
+	}
 	method List  {@!facts.List}
 	method Array {@!facts.Array}
-	method Set   {self.Array.Set}
+	method Set   {$.Array.Set}
 }
